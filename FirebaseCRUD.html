@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <title>CRUD 9x</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        
+<div>
+    <div style="float:left; padding-left: 2em;">
+        <input type="number" id="no" placeholder="Enter Product No"><br>
+        <input type="text" id="name" placeholder="Enter Product Name"><br>
+        <input type="number" id="price" placeholder="Enter Product Price"><br>
+        <select id="supplierid">
+            <option value="" selected disabled hidden> Choose a Supplier</option>
+            <option value="1">大同</option>
+            <option value="2">桶一</option>
+            <option value="3">忠孝</option>
+            <option value="4">仁愛</option>
+        </select><br>
+        <button id="btnSet">SET DATA</button>     
+        <button id="btnGet">GET DATA</button>  
+        </div>
+    <div style="float:left; padding-left: 2em;">
+        <input type="number" id="no2" placeholder="Enter Product No"><br>
+        <input type="text" id="name2" placeholder="Enter Product Name"><br>
+        <input type="number" id="price2" placeholder="Enter Product Price"><br>
+        <select id="supplierid2">
+            <option value="" selected disabled hidden> Choose a Supplier</option>
+            <option value="1">大同</option>
+            <option value="2">桶一</option>
+            <option value="3">忠孝</option>
+            <option value="4">仁愛</option>
+        </select><br>
+        <button id="btnDel">DEL DATA</button>     
+        <button id="btnSearch">SEARCH DATA</button>  
+        <button id="btnUpdate">UPDATE DATA</button>  
+        </div>
+</div>
+        
+        <hr style="clear:both">
+        
+        <div id="demo"></div> 
+        <div id="demo2"></div> 
+        <div id="demo3"></div> 
+        
+        <script type="module">
+ 
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.8/firebase-app.js";
+    import{getFirestore,doc,setDoc,collection,getDocs,onSnapshot,query,deleteDoc,getDoc,updateDoc} from "https://www.gstatic.com/firebasejs/9.6.8/firebase-firestore.js";
+   // import { getStorage } from "https://www.gstatic.com/firebasejs/9.6.8/firebase-storage.js";
+
+     const firebaseConfig = {
+       apiKey: "AIzaSyCs5EE-PoQI5n8Ep3zfVxzr-TL5XpOaQgc",
+       authDomain: "jsdb-4dcdc.firebaseapp.com",
+       databaseURL: "https://jsdb-4dcdc-default-rtdb.firebaseio.com",
+       projectId: "jsdb-4dcdc",
+       storageBucket: "jsdb-4dcdc.appspot.com",
+       messagingSenderId: "221459197737",
+       appId: "1:221459197737:web:bbb48990ce1110988d1138"
+     };
+
+     // Initialize Firebase
+     const app = initializeApp(firebaseConfig);
+     const db=getFirestore(app);
+     
+     const no=document.getElementById('no');
+     const name=document.getElementById('name');
+     const price=document.getElementById('price');
+     const supplierid=document.getElementById('supplierid');
+     const dtnSet=document.getElementById('btnSet');
+     const dtnGet=document.getElementById('btnGet');
+     
+     const no2=document.getElementById('no2');
+     const name2=document.getElementById('name2');
+     const price2=document.getElementById('price2');
+     const supplierid2=document.getElementById('supplierid2');
+     const dtnDel=document.getElementById('btnDel');
+     const dtnSearch=document.getElementById('btnSearch');
+     const dtnUpdate=document.getElementById('btnUpdate');
+     
+     
+     
+     const demo=document.getElementById('demo');
+     const demo2=document.getElementById('demo2');
+     const demo3=document.getElementById('demo3');
+     
+     btnSet.onclick=function(){
+         setData();
+     };
+     
+     getDataListen();
+     
+     btnGet.onclick=function(){
+         getData();
+     };
+     
+     btnDel.onclick=function(){
+         delData();
+     };
+     
+     btnSearch.onclick=function(){
+         searchData();
+     };
+     
+      btnUpdate.onclick=function(){
+         updateData();
+     };
+     
+     
+
+     // 新增文件
+     //await運算子可被用來等待 Promise，只能在 async function內使用。
+     //await 需置async function 內
+    async function setData(){
+      await setDoc(doc(db, "product", no.value), {
+       name: name.value,
+       price: price.value*1,
+       supplierid:supplierid.value*1
+     }).then(function(){
+         demo.innerHTML= no.value + "產品寫入OK<br>";
+         no.value='';
+         name.value='';
+         price.value='';
+         supplierid.value='';
+     });
+ }
+ 
+ //讀取文件(監聽)
+    function getDataListen(){         
+        const q = query(collection(db, "product"));        
+        const unsubscribe = onSnapshot(q, (querySnapshot) => { 
+         demo2.innerHTML='';
+         querySnapshot.forEach((doc) => {               
+             demo2.innerHTML +="<ul>產品編號：" + doc.id + ":"
+                             +'<li>產品名稱：' + doc.data().name + "</li>"
+                             +'<li>產品價格：' + doc.data().price + "</li>"
+                             +'<li>供應商編號：' + doc.data().supplierid + "</li></ul>";
+         });       
+       });
+
+    }
+
+ 
+ //讀取文件
+ async function getData(){  
+        demo3.innerHTML='';
+        const querySnapshot = await getDocs(collection(db, "product"));
+        querySnapshot.forEach((doc) => {
+        demo3.innerHTML =demo3.innerHTML + doc.id + "<br>"
+                      + "產品名稱:" + doc.data()["name"] + "<br>"
+                      + "產品價格:" + doc.data()["price"] + "<br>"
+                      + "供應商編號:" + doc.data()["supplierid"] + "<hr>";
+});
+ }
+ 
+ //刪除文件
+ async function delData(){
+     await deleteDoc(doc(db, "product", no2.value))
+             .then(()=>{
+                 alert(no2.value + " Deleted!!");
+                 no2.value='';
+             });
+ }
+ 
+ //搜尋文件
+ async function searchData(){     
+    const docRef = doc(db, "product", no2.value);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      //console.log("產品文件02:", docSnap.data());
+      var data=docSnap.data();
+      name2.value=data["name"];
+      price2.value=data["price"];
+      supplierid2.value=data["supplierid"];      
+    } else {    
+     alert("無此文件");
+    }
+ }
+ 
+ //更新文件
+ async function updateData(){
+     const washingtonRef = doc(db, "product", no2.value);
+        await updateDoc(washingtonRef, {
+         name:name2.value,
+         price:price2.value,
+         supplierid:supplierid2.value
+        }).then(function(){
+            alert('update ok!!');
+        });
+ }
+ 
+ 
+     </script>
+    </body>
+</html>
